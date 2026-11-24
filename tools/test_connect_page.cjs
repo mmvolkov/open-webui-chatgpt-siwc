@@ -35,23 +35,23 @@ const origin = process.argv[2];
       port: '54321',
       state: 's'.repeat(43)
     })}`);
-    await page.getByRole('status').filter({hasText: 'Not connected'}).waitFor();
+    await page.getByRole('status').filter({hasText: 'Не подключено'}).waitFor();
     assert.equal(await page.locator('#install').isVisible(), false);
     assert.equal(await page.evaluate(() => location.hash), '');
-    await page.getByRole('button', {name: 'Continue with ChatGPT'}).click();
+    await page.getByRole('button', {name: 'Продолжить с ChatGPT'}).click();
     await page.waitForURL('http://127.0.0.1:54321/connect**');
     assert.equal(pairCalls, 1);
 
     connected = true;
     await page.goto(`${origin}/siwc/connect?verify=1`);
-    await page.getByRole('status').filter({hasText: 'Connected'}).waitFor();
-    await page.getByText(/Live subscription model discovery succeeded/).waitFor();
-    assert.equal(await page.getByRole('button', {name: 'Continue with ChatGPT'}).isVisible(), false);
+    await page.getByRole('status').filter({hasText: 'Подключено'}).waitFor();
+    await page.getByText(/Модели подписки успешно обнаружены/).waitFor();
+    assert.equal(await page.getByRole('button', {name: 'Продолжить с ChatGPT'}).isVisible(), false);
     assert.equal(verifyCalls, 1);
 
     const text = await page.locator('body').innerText();
-    assert.match(text, /Sign into Open WebUI/);
-    assert.match(text, /Use a ChatGPT subscription for inference/);
+    assert.match(text, /Войдите в Open WebUI/);
+    assert.match(text, /Используйте подписку ChatGPT для запросов к моделям/);
     console.log('Browser connection flow passed with synthetic pairing, connected-state and model-discovery responses.');
   } finally {
     await browser.close();

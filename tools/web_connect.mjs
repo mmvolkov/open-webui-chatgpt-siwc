@@ -12,12 +12,12 @@ export function validateConnectUrl(raw) {
   try {
     url = new URL(raw);
   } catch {
-    throw new Error('The Open WebUI connection address is invalid.');
+    throw new Error('Неверный адрес подключения Open WebUI.');
   }
   const localHttp = url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   if ((!localHttp && url.protocol !== 'https:') || !url.hostname || url.username || url.password ||
       url.pathname !== '/siwc/connect' || url.search || url.hash) {
-    throw new Error('Use the HTTPS /siwc/connect address shown by your Open WebUI administrator.');
+    throw new Error('Используйте HTTPS-адрес /siwc/connect, указанный администратором Open WebUI.');
   }
   return url;
 }
@@ -41,13 +41,13 @@ export async function prepareWebConnection(
   const listener = http.createServer((req, res) => {
     const expectedHost = `127.0.0.1:${listener.address()?.port}`;
     if (req.headers.host !== expectedHost) {
-      res.writeHead(400).end('Invalid local connection.');
+      res.writeHead(400).end('Неверное локальное подключение.');
       return;
     }
 
     if (req.method === 'GET' && req.url === '/connect') {
       const scriptNonce = crypto.randomBytes(18).toString('base64url');
-      const html = `<!doctype html><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>Connect ChatGPT</title><p>Completing the secure connection…</p><script nonce="${scriptNonce}">(async()=>{const values=new URLSearchParams(location.hash.slice(1));history.replaceState(null,"","/connect");const body={state:values.get("state"),ticket:values.get("ticket"),status:values.get("status")};try{const r=await fetch("/handoff",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});if(!r.ok)throw Error();document.querySelector("p").textContent="Connection received. Return to the companion."}catch{document.querySelector("p").textContent="Connection expired. Return to Open WebUI and try again."}})()</script>`;
+      const html = `<!doctype html><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>Подключение ChatGPT</title><p>Завершаем защищенное подключение…</p><script nonce="${scriptNonce}">(async()=>{const values=new URLSearchParams(location.hash.slice(1));history.replaceState(null,"","/connect");const body={state:values.get("state"),ticket:values.get("ticket"),status:values.get("status")};try{const r=await fetch("/handoff",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});if(!r.ok)throw Error();document.querySelector("p").textContent="Подключение получено. Вернитесь в приложение."}catch{document.querySelector("p").textContent="Время подключения истекло. Вернитесь в Open WebUI и попробуйте снова."}})()</script>`;
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-store',
@@ -61,7 +61,7 @@ export async function prepareWebConnection(
     if (req.method !== 'POST' || req.url !== '/handoff' ||
         req.headers.origin !== `http://127.0.0.1:${listener.address()?.port}` ||
         !String(req.headers['content-type'] || '').toLowerCase().startsWith('application/json') || used) {
-      res.writeHead(400).end('Invalid local connection.');
+      res.writeHead(400).end('Неверное локальное подключение.');
       return;
     }
     const chunks = [];
@@ -76,14 +76,14 @@ export async function prepareWebConnection(
       try {
         body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       } catch {
-        res.writeHead(400).end('Invalid local connection.');
+        res.writeHead(400).end('Неверное локальное подключение.');
         return;
       }
       const validState = body.state === state;
       const alreadyConnected = body.status === 'connected' && !body.ticket;
       const validTicket = TOKEN.test(body.ticket || '');
       if (!validState || (!alreadyConnected && !validTicket)) {
-        res.writeHead(400).end('Invalid local connection.');
+        res.writeHead(400).end('Неверное локальное подключение.');
         return;
       }
       used = true;
@@ -96,14 +96,14 @@ export async function prepareWebConnection(
     });
   });
 
-  listener.on('error', () => rejectTicket(new Error('Could not prepare the local connection.')));
+  listener.on('error', () => rejectTicket(new Error('Не удалось подготовить локальное подключение.')));
   await new Promise((resolve, reject) => {
     listener.once('error', reject);
     listener.listen(0, '127.0.0.1', resolve);
   });
 
   const timeout = setTimeout(
-    () => rejectTicket(new Error('Connection expired. Return to Open WebUI and try again.')),
+    () => rejectTicket(new Error('Время подключения истекло. Вернитесь в Open WebUI и попробуйте снова.')),
     timeoutMs
   );
   const browserUrl = new URL(connectUrl);
@@ -141,17 +141,17 @@ export async function prepareWebConnection(
         cache: 'no-store'
       });
     } catch {
-      throw new Error('The secure connection could not reach Open WebUI.');
+      throw new Error('Не удалось связаться с Open WebUI через защищенное подключение.');
     }
     if (!response.ok) {
-      throw new Error('Connection expired or could not be verified. Return to Open WebUI.');
+      throw new Error('Время подключения истекло или проверка не удалась. Вернитесь в Open WebUI.');
     }
     return response.json();
   }
 
   const prepared = await send('prepare');
   if (!HOST_ID.test(prepared.host_id || '') || !TOKEN.test(prepared.nonce || '')) {
-    throw new Error('Open WebUI returned an invalid connection request.');
+    throw new Error('Open WebUI вернул некорректный запрос подключения.');
   }
   return {
     hostId: prepared.host_id,
@@ -159,7 +159,7 @@ export async function prepareWebConnection(
     async transfer(record) {
       const result = await send('complete', record);
       if (result.configured !== true) {
-        throw new Error('Open WebUI did not confirm encrypted credential storage.');
+        throw new Error('Open WebUI не подтвердил зашифрованное хранение учетных данных.');
       }
       await openBrowser(verifyUrl.toString());
     }

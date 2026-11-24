@@ -1,5 +1,7 @@
 # Open WebUI ChatGPT SIWC
 
+**[Русская документация / Russian documentation](README.ru.md)**
+
 Use an eligible ChatGPT subscription with self-hosted Open WebUI through OpenAI's official Sign in with ChatGPT (SIWC) flow and Responses API.
 
 This project brings an eligible ChatGPT subscription into a self-hosted Open WebUI deployment through the official ChatGPT Plus or Pro authorization flow. Plan eligibility and availability are controlled by OpenAI. It is an independent, community-maintained adapter and is not affiliated with, endorsed by, or sponsored by OpenAI or Open WebUI. See OpenAI's [SIWC quickstart](https://developers.openai.com/siwc/quickstart).

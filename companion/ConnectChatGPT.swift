@@ -24,19 +24,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Connect ChatGPT"
-        label = NSTextField(wrappingLabelWithString: "Start from the Connect ChatGPT page in your Open WebUI instance.")
+        window.title = "Подключение ChatGPT"
+        label = NSTextField(wrappingLabelWithString: "Начните с страницы подключения ChatGPT в своем Open WebUI.")
         label.frame = NSRect(x: 28, y: 92, width: 464, height: 105)
         window.contentView!.addSubview(label)
 
-        continueButton = NSButton(title: "Continue with ChatGPT", target: self, action: #selector(beginAuthorization))
-        continueButton.frame = NSRect(x: 310, y: 32, width: 182, height: 34)
+        continueButton = NSButton(title: "Продолжить с ChatGPT", target: self, action: #selector(beginAuthorization))
+        continueButton.frame = NSRect(x: 276, y: 32, width: 216, height: 34)
         continueButton.bezelStyle = .rounded
         continueButton.isEnabled = false
         window.contentView!.addSubview(continueButton)
 
-        let cancelButton = NSButton(title: "Cancel", target: self, action: #selector(cancelAuthorization))
-        cancelButton.frame = NSRect(x: 215, y: 32, width: 82, height: 34)
+        let cancelButton = NSButton(title: "Отмена", target: self, action: #selector(cancelAuthorization))
+        cancelButton.frame = NSRect(x: 172, y: 32, width: 92, height: 34)
         cancelButton.bezelStyle = .rounded
         window.contentView!.addSubview(cancelButton)
 
@@ -47,11 +47,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         guard bundleIsValid, urls.count == 1, let value = validatedConnectURL(urls[0]) else {
-            label?.stringValue = "The Open WebUI connection address is invalid. Return to Open WebUI and start again."
+            label?.stringValue = "Неверный адрес подключения Open WebUI. Вернитесь в Open WebUI и начните заново."
             return
         }
         connectURL = value
-        label.stringValue = "Connect to \(value.host ?? "your Open WebUI instance")? Continue only if you started this from an Open WebUI server you trust. OAuth will open in your browser."
+        label.stringValue = "Подключиться к \(value.host ?? "вашему Open WebUI")? Продолжайте, только если вы доверяете этому серверу Open WebUI. Страница OAuth откроется в браузере."
         continueButton.isEnabled = true
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -79,20 +79,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         process.terminationHandler = { [weak self] process in
             DispatchQueue.main.async {
                 self?.label.stringValue = process.terminationStatus == 0
-                    ? "Connected. Return to Open WebUI to finish checking the provider."
-                    : "The connection did not finish. Return to Open WebUI and try again."
+                    ? "Подключено. Вернитесь в Open WebUI, чтобы завершить проверку провайдера."
+                    : "Не удалось завершить подключение. Вернитесь в Open WebUI и попробуйте снова."
                 self?.task = nil
                 self?.continueButton.isEnabled = false
             }
         }
         task = process
         continueButton.isEnabled = false
-        label.stringValue = "Preparing a secure connection. Keep this companion open and approve the request in your browser."
+        label.stringValue = "Подготавливаем защищенное подключение. Не закрывайте приложение и подтвердите запрос в браузере."
         do {
             try process.run()
         } catch {
             task = nil
-            label.stringValue = "The companion could not start. Download a fresh copy and try again."
+            label.stringValue = "Не удалось запустить приложение. Скачайте новую копию и повторите попытку."
         }
     }
 
@@ -103,7 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         connectURL = nil
         continueButton.isEnabled = false
-        label.stringValue = "Cancelled. Return to Open WebUI when you are ready to connect."
+        label.stringValue = "Отменено. Вернитесь в Open WebUI, когда будете готовы подключиться."
     }
 
     func applicationWillTerminate(_ notification: Notification) {
