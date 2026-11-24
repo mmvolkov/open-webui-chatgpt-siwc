@@ -30,12 +30,12 @@ let credentialRecord;
 try {
   const connectUrl = argument('--connect-url');
   if (!connectUrl || !process.argv.includes('--web-connect')) {
-    throw new Error('Start Connect ChatGPT from your Open WebUI connection page.');
+    throw new Error('Запустите Connect ChatGPT со страницы подключения в Open WebUI.');
   }
 
   const webConnection = await prepareWebConnection(connectUrl);
   if (webConnection.alreadyConnected) {
-    console.log('This adapter is already connected. Existing credentials were preserved.');
+    console.log('Адаптер уже подключен. Существующие учетные данные сохранены.');
     process.exit(0);
   }
 
@@ -55,8 +55,8 @@ try {
     try {
       callback = new URL(request.url || '/', 'http://127.0.0.1');
     } catch {
-      response.writeHead(400).end('Invalid callback.');
-      rejectCallback(new Error('Invalid OAuth callback.'));
+      response.writeHead(400).end('Неверный обратный вызов OAuth.');
+      rejectCallback(new Error('Неверный обратный вызов OAuth.'));
       return;
     }
     if (request.method !== 'GET' || callback.pathname !== '/auth/callback') {
@@ -69,11 +69,11 @@ try {
       'Cache-Control': 'no-store',
       'Referrer-Policy': 'no-referrer',
       'X-Content-Type-Options': 'nosniff'
-    }).end('ChatGPT authorization received. You can close this tab.');
+    }).end('Авторизация ChatGPT получена. Эту вкладку можно закрыть.');
     server.close();
     resolveCallback({params: callback.searchParams, redirectUri});
   });
-  server.on('error', () => rejectCallback(new Error('Could not start the loopback OAuth listener.')));
+  server.on('error', () => rejectCallback(new Error('Не удалось запустить локальный обработчик OAuth.')));
 
   await new Promise((resolve, reject) => {
     server.once('listening', resolve);
@@ -90,11 +90,11 @@ try {
     challenge
   });
 
-  console.log('Opening the official ChatGPT authorization page in your browser…');
+  console.log('Открываем официальную страницу авторизации ChatGPT в браузере…');
   await open(authorizationUrl.toString());
   const approvalExpired = new Promise((_, reject) => {
     approvalTimer = setTimeout(
-      () => reject(new Error('ChatGPT approval expired. Return to Open WebUI and try again.')),
+      () => reject(new Error('Время подтверждения ChatGPT истекло. Вернитесь в Open WebUI и попробуйте снова.')),
       600000
     );
   });
@@ -124,21 +124,21 @@ try {
       signal: AbortSignal.timeout(45000)
     });
     if (!tokenResponseHttp.ok) {
-      throw new Error(`OAuth token exchange failed (HTTP ${tokenResponseHttp.status}).`);
+      throw new Error(`Ошибка обмена OAuth-токена (HTTP ${tokenResponseHttp.status}).`);
     }
     try {
       tokenResponse = await tokenResponseHttp.json();
     } catch {
-      throw new Error('OAuth token response could not be parsed.');
+      throw new Error('Не удалось прочитать ответ с OAuth-токеном.');
     }
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith('OAuth token exchange failed')) throw error;
-    throw new Error('OAuth token exchange could not be completed.');
+    if (error instanceof Error && error.message.startsWith('Ошибка обмена OAuth-токена')) throw error;
+    throw new Error('Не удалось завершить обмен OAuth-токена.');
   }
 
   tokens = tokenResponse;
   if (!tokens.id_token || !tokens.access_token || !tokens.refresh_token) {
-    throw new Error('OAuth token response is missing a required credential.');
+    throw new Error('В ответе OAuth отсутствуют обязательные учетные данные.');
   }
 
   const payload = await verifyIdToken(tokens.id_token, clientId, nonce);
@@ -161,10 +161,10 @@ try {
     saved_at: new Date().toISOString()
   };
   await webConnection.transfer(credentialRecord);
-  console.log('Connected. Return to Open WebUI to finish checking the provider.');
+  console.log('Подключено. Вернитесь в Open WebUI, чтобы завершить проверку провайдера.');
 } catch (error) {
   if (server?.listening) server.close();
-  const message = error instanceof Error ? error.message : 'SIWC authorization failed.';
+  const message = error instanceof Error ? error.message : 'Ошибка авторизации SIWC.';
   console.error(message);
   process.exitCode = 1;
 } finally {
