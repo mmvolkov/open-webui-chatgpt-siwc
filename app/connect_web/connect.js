@@ -28,13 +28,13 @@ async function api(path, options = {}) {
       headers: {...(options.headers || {})}
     });
   } catch {
-    throw new Error('The connection could not reach the SIWC adapter.');
+    throw new Error('Не удалось связаться с адаптером SIWC.');
   }
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Sign into Open WebUI with an allowed administrator account, then return here.');
-    if (response.status === 403) throw new Error('This Open WebUI account is not allowed to connect the shared provider.');
-    if (response.status === 409) throw new Error('ChatGPT is already connected. Existing credentials were preserved.');
-    throw new Error(`The connection request failed (HTTP ${response.status}).`);
+    if (response.status === 401) throw new Error('Войдите в Open WebUI под разрешенной учетной записью администратора и вернитесь сюда.');
+    if (response.status === 403) throw new Error('Этой учетной записи Open WebUI запрещено подключать общий провайдер.');
+    if (response.status === 409) throw new Error('ChatGPT уже подключен. Существующие учетные данные сохранены.');
+    throw new Error(`Ошибка запроса подключения (HTTP ${response.status}).`);
   }
   return response.json();
 }
@@ -53,8 +53,8 @@ async function verify() {
   try {
     const result = await api('/siwc/verify', {method: 'POST'});
     item.textContent = result.models.length
-      ? `Live subscription model discovery succeeded (${result.models.length} models).`
-      : 'No subscription models are currently available to this ChatGPT account.';
+      ? `Модели подписки успешно обнаружены (${result.models.length}).`
+      : 'Для этого аккаунта ChatGPT сейчас нет доступных моделей по подписке.';
   } catch (error) {
     item.textContent = error.message;
   }
@@ -64,7 +64,7 @@ async function verify() {
 async function refresh() {
   try {
     const statusResult = await api('/siwc/status');
-    state.textContent = statusResult.connected ? 'Connected' : statusResult.configured ? 'Connection needs attention' : 'Not connected';
+    state.textContent = statusResult.connected ? 'Подключено' : statusResult.configured ? 'Требуется проверить подключение' : 'Не подключено';
     connect.hidden = statusResult.configured;
     document.querySelector('#install').hidden = statusResult.configured || companionReady;
     document.querySelector('#download').hidden = !statusResult.companion_available;
@@ -76,7 +76,7 @@ async function refresh() {
         localCallback({status: 'connected', state: companion.state});
         return;
       }
-      message.textContent = 'Credentials are stored encrypted by the adapter. Select a discovered model in Open WebUI to start a chat.';
+      message.textContent = 'Адаптер хранит учетные данные в зашифрованном виде. Чтобы начать чат, выберите найденную модель в Open WebUI.';
       if (shouldVerify && !verificationStarted) {
         verificationStarted = true;
         await verify();
@@ -85,10 +85,10 @@ async function refresh() {
     }
 
     message.textContent = companionReady
-      ? 'Continue to pair this browser with the local macOS companion.'
-      : 'Connect ChatGPT to this Open WebUI instance. The OAuth callback runs on your Mac.';
+      ? 'Продолжите, чтобы связать браузер с локальным приложением для macOS.'
+      : 'Подключите ChatGPT к этому экземпляру Open WebUI. Ответ OAuth поступит на ваш Mac.';
   } catch (error) {
-    state.textContent = 'Sign-in required';
+    state.textContent = 'Требуется вход';
     message.textContent = error.message;
   }
 }
@@ -102,7 +102,7 @@ connect.addEventListener('click', async () => {
       launch.searchParams.set('connect_url', config.connect_url);
       location.href = launch.toString();
       document.querySelector('#install').hidden = false;
-      message.textContent = 'Approve the Open WebUI address in Connect ChatGPT. If the companion is not installed, download it below.';
+      message.textContent = 'Подтвердите адрес Open WebUI в приложении Connect ChatGPT. Если приложение не установлено, скачайте его ниже.';
       connect.disabled = false;
       return;
     }
